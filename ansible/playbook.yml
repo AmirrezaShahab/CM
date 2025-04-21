@@ -1,0 +1,101 @@
+---
+- hosts: all
+  vars:
+    docker_package_to_remove:
+      - docker
+      - docker.io
+      - docker-engin
+      - containerd
+      - runc
+  # become: yes
+
+    docker_prerequierd_package:
+      - gnupg
+      - ca-certificates
+      - curl  
+
+    docker_package_to_install:
+      - docker-ce 
+      - docker-ce-cli 
+      - containerd.io 
+      - docker-buildx-plugin 
+      - docker-compose-plugin
+
+
+  tasks:
+    - name: Update package cache
+      # become: yes     # Access Root
+      apt:
+        update_cache: yes
+
+    - name: Upgrade system
+      apt:
+        upgrade: full
+
+
+    - name: Check Docker Installation
+      shell: "which docker"
+      ignore_errors: yes
+      register: result
+
+    - name: Exit if Installed
+      meta: end_host
+      when: result.rc == 0  
+
+
+    - name: Uninstall old docker package
+      apt:
+        name: "{{ docker_package_to_remove }}"
+        # name: "{{ item }}"
+        state: absent
+      # loop: "{{ docker_package_to_remove }}"  
+
+    - name: Install prerequierd package
+      apt:
+        name: "{{ docker_prerequierd_package }}"
+        state: present
+
+    - name: Install docker apt repository key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+
+    # - name: Show Facts
+    #   debug:
+    #     msg: "{{ ansible_facts ['architecture'] }} - {{ ansible_facts ['lsb']['codename'] }}"
+        # var: ansible_facts        
+
+    - name: add Docker repository
+      apt_repository:
+        repo: deb [arch="{{ "amd64" if  ansible_facts ['architecture'] == "x86_64" else "i386" }}" ]  https://download.docker.com/linux/ubuntu {{ ansible_facts ['lsb']['codename'] }} stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: "{{ docker_package_to_install }}"
+        state: present
+
+      
+
+- hosts: db_servers
+  gather_facts: no
+  tasks:
+    - name: Install MySQL
+      apt:
+        name: mysql-server
+        state: present
+
+- hosts: web_servers
+  gather_facts: no
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+
+- hosts: lb_servers
+  gather_facts: no
+  tasks:
+    - name: Install HAProxy
+      apt:
+        name: haproxy
+        state: present
