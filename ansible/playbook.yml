@@ -84,6 +84,8 @@
         name: mysql-server
         state: present
 
+
+
 - hosts: web_servers
   gather_facts: no
   tasks:
@@ -92,10 +94,28 @@
         name: nginx
         state: present
 
+
+    - name: copy nginx config file
+      copy:
+        src: nginx.conf
+        dest: /etc/nginx/nginx.conf
+      notify:
+        - restart nginx
+
+  handlers:
+    - name: restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+
+
+
+
 - hosts: lb_servers
   gather_facts: no
   tasks:
     - name: Install HAProxy
       apt:
         name: haproxy
-        state: present
+        state: present        
+        
