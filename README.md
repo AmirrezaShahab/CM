@@ -22,4 +22,4 @@ To get started with Ansible, follow these steps:
 
 2. **Clone this Repository**:
    ```bash
-   git clone https://github.com/your-username/your-repo.git
+   https://github.com/AmirrezaShahab/CM.git
